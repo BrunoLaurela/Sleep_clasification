@@ -9,13 +9,17 @@ import pandas as pd
 from KC_algorithm.model import score_KCs
 from KC_algorithm.plotting import KC_from_probas
 from scipy.signal import welch
+import warnings
+
 ##############################################################
 # la idea es generar funciones que tengan todas las mismas salidas y en lo posible la mismas entradas 
+
+# Las salidas de estas funciones peuden ser de dos tipos : Series de Pandas o Archivos raw con canales Stim indicando el evento
 ##############################################################
 
 # detectar eventos spindle  tengo que seguir trabajando en este codigo
 
-def SpindleDetect(raw, canal): # parametros : definir ...
+def SpindleDetect(raw, metadata): # parametros : definir ...
     """_summary_
 
     Args:
@@ -26,35 +30,60 @@ def SpindleDetect(raw, canal): # parametros : definir ...
         _type_: _description_
     """
     # seleciono los canales que voy a evaluar spindle
-    #raw.pick_types(include = canal)  #  voy a elejir que use un solo canal para hacer esta etapa
-   
-    # hago la deteccion de spindle
-    sp = yasa.spindles_detect(raw)
-    #canal_mas_detect = max(sp.get_coincidence_matrix(scaled=False)) # aca elijo el canal que ams spindle detecto
-   
-    # selecciono el o los canales que quiero obtener e spindle
-    peak = sp.summary() 
-    canal_usado = peak[peak['Channel'] == canal[0]]
-   
+    raw_copy = raw.copy()
+
+    eeg_list = []
+    for subkey in metadata['channels']['eeg']:
+        eeg_list.extend(metadata['channels']['eeg'][subkey])
+    raw_copy.pick( eeg_list)
+        
+    spindle = yasa.spindles_detect(raw_copy)
+
+    events = spindle.summary()   
     
-    # genero la matriz de con los eventos
-    data_stim = (canal_usado['Peak']*raw.info['sfreq']).astype(int)
-    pre_stim = np.zeros_like(np.array(np.arange(raw.n_times))) 
-    pre_stim[data_stim] = 1
-    stim_chan = pre_stim.reshape(1,-1)
+    if events is None:
+        warnings.warn("No se encontraron husos de sueño en los datos.")
+    else:
+
+        #canal_mas_detect = max(sp.get_coincidence_matrix(scaled=False)) # aca elijo el canal que ams spindle detecto
+    
+        # selecciono el o los canales que quiero obtener e spindle
+        """
+        peak = sp.summary() 
+        canal_usado = peak[peak['Channel'] == canal[0]]
+        
+        
+        # genero la matriz de con los eventos
+        data_stim = (canal_usado['Peak']*raw.info['sfreq']).astype(int)
+        pre_stim = np.zeros_like(np.array(np.arange(raw.n_times))) 
+        pre_stim[data_stim] = 1
+        stim_chan = pre_stim.reshape(1,-1)
 
 
-    mask_info = mne.create_info(ch_names=["STIMspindle"],
-                            sfreq=raw.info["sfreq"],
-                            ch_types=["stim"]
-                           )
-    raw_mask = mne.io.RawArray(data=stim_chan,
-                           info=mask_info,
-                           first_samp=raw.first_samp
-                          )
-    raw.add_channels([raw_mask], force_update_info=True)
+        mask_info = mne.create_info(ch_names=["STIMspindle"],
+                                sfreq=raw_copy.info["sfreq"],
+                                ch_types=["stim"]
+                            )
+        raw_mask = mne.io.RawArray(data=stim_chan,
+                            info=mask_info,
+                            first_samp=raw_copy.first_samp
+                            )
+        raw.add_channels([raw_mask], force_update_info=True)
+        """
+        events_sorted = events.sort_values('Start').reset_index(drop=True)
+
+        # Eliminar eventos duplicados dentro de un margen de tiempo (por ejemplo, 100 milisegundos)
+        margin = 0.5  # 500 milisegundos
+        unique_events = [events_sorted.iloc[0]]  # Lista para guardar eventos únicos
+
+        for i in range(1, len(events_sorted)):
+            if events_sorted['Start'].iloc[i] - unique_events[-1]['Start'] > margin:
+                unique_events.append(events_sorted.iloc[i])
+
+        # Convertir la lista de eventos únicos de nuevo a un DataFrame
+        unique_events_df = pd.DataFrame(unique_events)
  
-    return raw 
+    return unique_events_df['Start'] 
  # data stim tiene indica enq ue meustra ocurrio el spindle y raw tieene agregado el canal de estimulo
     # return stim_data # puede retornar el stim o una combinacion de de array cada uno para cada canal
 """
@@ -132,7 +161,7 @@ def kComplexDetect(raw, canal, dict, Annotacion_con__duracion  = True) :
 
 # Revisar implementacion SW y REMdetect
 
-def RemDetect(loc, roc, sf, raw) :   # los datos debene estar en uV
+def RemDetect(raw,metadata) :   # los datos debene estar en uV
     """_summary_
 
     Args:
@@ -142,14 +171,14 @@ def RemDetect(loc, roc, sf, raw) :   # los datos debene estar en uV
         raw (_type_): _description_
 
     Returns:
-        _type_: _description_
+        events: pandas.core.series.Series, donde se indica en cada fila el inicio del evento 
     """
-    rem = yasa.rem_detect(loc, roc, sf)
+    rem = yasa.rem_detect(raw.get_data(picks= metadata['channels']['eog'], units = 'uV')[0], raw.get_data(picks= metadata['channels']['eog'][1],units = 'uV'),raw.info['sfreq'], duration=(0.2, 0.6))
 
     # Get the detection dataframe
     events = rem.summary()
 
-    
+    """
     data_stim = (events['Peak']*raw.info['sfreq']).astype(int)
     pre_stim = np.zeros_like(np.array(np.arange(raw.n_times))) 
     pre_stim[data_stim] = 1
@@ -164,17 +193,22 @@ def RemDetect(loc, roc, sf, raw) :   # los datos debene estar en uV
                             first_samp=raw.first_samp
                             )
     raw.add_channels([raw_mask], force_update_info=True)
+    """
+    return events['Start'] #raw
 
-    return raw
 
-
-def DetectorSW(raw):
-    sw = yasa.sw_detect(raw)
-
+def DetectorSW(raw,metadata):   # puedo usarlo tambien para detectar complejos K teniendo encuenta que son identicamente iguales a las ondas lentas pero aisladas en una etapa
+    raw_copy = raw.copy()
+    eeg_list = []
+    for subkey in metadata['channels']['eeg']:
+        eeg_list.extend(metadata['channels']['eeg'][subkey])
+    raw_copy.pick( eeg_list)
+    
+    sw = yasa.sw_detect(raw_copy)
     # Get the detection dataframe
     events = sw.summary()
 
-    
+    """
     data_stim = (events['MidCrossing']*raw.info['sfreq']).astype(int)
     pre_stim = np.zeros_like(np.array(np.arange(raw.n_times))) 
     pre_stim[data_stim] = 1
@@ -189,13 +223,28 @@ def DetectorSW(raw):
                             first_samp=raw.first_samp
                             )
     raw.add_channels([raw_mask], force_update_info=True)
+    """
 
-    return raw
+    events_sorted = events.sort_values('Start').reset_index(drop=True)
+
+    # Eliminar eventos duplicados dentro de un margen de tiempo (por ejemplo, 100 milisegundos)
+    margin = 0.5  # 500 milisegundos
+    unique_events = [events_sorted.iloc[0]]  # Lista para guardar eventos únicos
+
+    for i in range(1, len(events_sorted)):
+        if events_sorted['Start'].iloc[i] - unique_events[-1]['Start'] > margin:
+            unique_events.append(events_sorted.iloc[i])
+
+    # Convertir la lista de eventos únicos de nuevo a un DataFrame
+    unique_events_df = pd.DataFrame(unique_events)
+
+
+    return unique_events_df[['Start','Duration']]#raw
     
 
 
 ################### -> revisar implementacion, echo
-def Periodograma_Welch_por_segmento(raw, canales) :
+def Periodograma_Welch_por_segmento(raw, metadata) :
     """
     
     _summary_
@@ -205,9 +254,28 @@ def Periodograma_Welch_por_segmento(raw, canales) :
         canales (_type_): _description_
 
     """
+    
+    # Selecionon de canales  solo elijo 1 canal de EEG 1 de EMG  y los dos de EOG:
+    regiones = ['frontal', 'central', 'parietal', 'occipital']
+    Canal = []
+    for region in regiones:
+        if metadata['channels']['eeg'][region]:
+            if len(metadata['channels']['eeg'][region]) >= 2:
+                Canal.extend(metadata['channels']['eeg'][region])
+            else:
+                Canal.append(metadata['channels']['eeg'][region][0])
+
+    # Agregar canal EMG si existe
+    if metadata['channels']['emg']:
+        Canal.append(metadata['channels']['emg'][0])
+
+    # Agregar canales EOG si existen exactamente dos
+    if 'eog' in metadata['channels'] and len(metadata['channels']['eog']) == 2:
+        Canal.extend(metadata['channels']['eog'])
+
 
     # Create a 3-D array
-    data = raw.get_data(canales)
+    data = raw.get_data(Canal, units="uV")    ############## Elijo solo un canal de EEG  de todos los que tengo , no hay mucha diferencia entre canales de EEG #######################
     sf = raw.info['sfreq']
 
     # divido mi data en ventanas de 30 segundos
@@ -222,15 +290,23 @@ def Periodograma_Welch_por_segmento(raw, canales) :
 
     #freqs.shape, psd.shape
 
-
-
     # separo en bandas frecuenciales lo calculado 
     bands=[(0.5, 4, 'Delta'), (4, 8, 'Theta'), (8, 12, 'Alpha'), 
         (12, 16, 'Sigma'), (16, 30, 'Beta')]
 
-    # Calculate the bandpower on 3-D PSD array
+    # Calculate the bandpower on 3-D PSD array 
     bandpower = yasa.bandpower_from_psd_ndarray(psd, freqs, bands)
-    np.round(bandpower, 2)
-    print(bandpower.shape)
+    bandpower = np.round(bandpower, 3)
+
+    band_names = ['Delta', 'Theta', 'Alpha', 'Sigma', 'Beta']
+
+    # Convertir cada banda de frecuencia en un DataFrame separado, de esta manera se presentan mas ordenados
+    dfs = []
+    for  i in range(bandpower.shape[0]):  # Iterar sobre las bandas de frecuencia
+        df = pd.DataFrame(bandpower[i], columns=Canal)
+        dfs.append(df)
+
+    result_df = pd.concat(dfs, keys=[f'{banda}' for i, banda in zip(range(bandpower.shape[0]),band_names)], axis=0)
+
     
-    return  bandpower
+    return  result_df
