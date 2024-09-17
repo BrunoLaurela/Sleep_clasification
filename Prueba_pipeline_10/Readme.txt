@@ -1,0 +1,1 @@
+se uso elno concordancia gssc y yasa para selecicon de epcoas y las reglas AASM rules directa para todo el dataset, la diferencia con los anteriores esque estas reglas assm rules directas estan correguidas y modificadas corruigendo lso errores de las pruebas 7 8 y 9

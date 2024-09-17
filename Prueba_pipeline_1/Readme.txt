@@ -1,0 +1,1 @@
+Esta prueba las anotaciones que hicieron estan mal, porque no se corresponde con el sujeto, asique no se considera, de todos modos los acc parecen que si se calcularon bien y aca se uso el codigo no dejando a N1 como descarte... seguramente no use esta prueba

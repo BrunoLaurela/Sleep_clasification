@@ -46,6 +46,7 @@ def ClassifGSSC(raw, metadata):
     alleeg.extend(metadata['channels']['eeg']['central'])
     alleeg.extend(metadata['channels']['eeg']['frontal'])
     alleeg.extend(metadata['channels']['eeg']['parietal'])
+    alleeg.extend(metadata['channels']['eeg']['occipital'])
 
     anotaciones,tiempos, min_logits = Net.mne_infer(inst = raw, eeg=alleeg, eog=metadata["channels"]["eog"])
 

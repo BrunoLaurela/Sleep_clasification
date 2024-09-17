@@ -1,0 +1,1 @@
+Prueba muy precida a la 3 la unica diferencia es que la votacion de las etapas a evaluar se realizan unsado unicamente umbrales de GSSC exclusivamente

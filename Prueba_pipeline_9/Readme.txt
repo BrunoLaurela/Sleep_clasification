@@ -1,0 +1,1 @@
+Igual a la prueba 8 pero se usaron mas dataset y esta mas completo se usa la funcion AASM_RulesDirecto_todos_conGSSC --->tiene un error el codigo puse  q se cumpla N3 siempre que sea menor al 0.2*30

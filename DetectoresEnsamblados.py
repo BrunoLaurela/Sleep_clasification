@@ -35,41 +35,20 @@ def SpindleDetect(raw, metadata): # parametros : definir ...
     eeg_list = []
     for subkey in metadata['channels']['eeg']:
         eeg_list.extend(metadata['channels']['eeg'][subkey])
-    raw_copy.pick( eeg_list)
+    raw_copy.pick( eeg_list )
         
-    spindle = yasa.spindles_detect(raw_copy)
+    spindle = yasa.spindles_detect(raw_copy) # suiil
 
-    events = spindle.summary()   
-    
-    if events is None:
+   
+
+   # Verificar si no se encontraron husos de sueño por algun error
+    if spindle is None :
         warnings.warn("No se encontraron husos de sueño en los datos.")
+        eventos = pd.DataFrame()  # DataFrame vacío
     else:
-
-        #canal_mas_detect = max(sp.get_coincidence_matrix(scaled=False)) # aca elijo el canal que ams spindle detecto
-    
-        # selecciono el o los canales que quiero obtener e spindle
-        """
-        peak = sp.summary() 
-        canal_usado = peak[peak['Channel'] == canal[0]]
         
+        events = spindle.summary()
         
-        # genero la matriz de con los eventos
-        data_stim = (canal_usado['Peak']*raw.info['sfreq']).astype(int)
-        pre_stim = np.zeros_like(np.array(np.arange(raw.n_times))) 
-        pre_stim[data_stim] = 1
-        stim_chan = pre_stim.reshape(1,-1)
-
-
-        mask_info = mne.create_info(ch_names=["STIMspindle"],
-                                sfreq=raw_copy.info["sfreq"],
-                                ch_types=["stim"]
-                            )
-        raw_mask = mne.io.RawArray(data=stim_chan,
-                            info=mask_info,
-                            first_samp=raw_copy.first_samp
-                            )
-        raw.add_channels([raw_mask], force_update_info=True)
-        """
         events_sorted = events.sort_values('Start').reset_index(drop=True)
 
         # Eliminar eventos duplicados dentro de un margen de tiempo (por ejemplo, 100 milisegundos)
@@ -82,9 +61,11 @@ def SpindleDetect(raw, metadata): # parametros : definir ...
 
         # Convertir la lista de eventos únicos de nuevo a un DataFrame
         unique_events_df = pd.DataFrame(unique_events)
+        
+        eventos = unique_events_df['Start']
  
-    return unique_events_df['Start'] 
- # data stim tiene indica enq ue meustra ocurrio el spindle y raw tieene agregado el canal de estimulo
+    return eventos
+    # data stim tiene indica enq ue meustra ocurrio el spindle y raw tieene agregado el canal de estimulo
     # return stim_data # puede retornar el stim o una combinacion de de array cada uno para cada canal
 """
 ALGORITMO kCOMPLEX
@@ -173,28 +154,20 @@ def RemDetect(raw,metadata) :   # los datos debene estar en uV
     Returns:
         events: pandas.core.series.Series, donde se indica en cada fila el inicio del evento 
     """
-    rem = yasa.rem_detect(raw.get_data(picks= metadata['channels']['eog'], units = 'uV')[0], raw.get_data(picks= metadata['channels']['eog'][1],units = 'uV'),raw.info['sfreq'], duration=(0.2, 0.6))
+    if len(metadata['channels']['eog']) == 2 :
+        rem_ = yasa.rem_detect(raw.get_data(picks= metadata['channels']['eog'], units = 'uV')[0], raw.get_data(picks= metadata['channels']['eog'][1],units = 'uV'),raw.info['sfreq'], duration=(0.2, 0.6))
 
-    # Get the detection dataframe
-    events = rem.summary()
-
-    """
-    data_stim = (events['Peak']*raw.info['sfreq']).astype(int)
-    pre_stim = np.zeros_like(np.array(np.arange(raw.n_times))) 
-    pre_stim[data_stim] = 1
-    stim_chan = pre_stim.reshape(1,-1)
-    
-    mask_info = mne.create_info(ch_names=["STIMREM"],
-                                sfreq=raw.info["sfreq"],
-                                ch_types=["stim"]
-                            )
-    raw_mask = mne.io.RawArray(data=stim_chan,
-                            info=mask_info,
-                            first_samp=raw.first_samp
-                            )
-    raw.add_channels([raw_mask], force_update_info=True)
-    """
-    return events['Start'] #raw
+         # Get the detection dataframe
+        if rem_ is None :
+            eventos = pd.DataFrame()
+        else :
+            events = rem_.summary()
+            eventos = events['Start']
+    else :
+        eventos= pd.DataFrame()
+         
+ 
+    return eventos #raw
 
 
 def DetectorSW(raw,metadata):   # puedo usarlo tambien para detectar complejos K teniendo encuenta que son identicamente iguales a las ondas lentas pero aisladas en una etapa
@@ -206,40 +179,28 @@ def DetectorSW(raw,metadata):   # puedo usarlo tambien para detectar complejos K
     
     sw = yasa.sw_detect(raw_copy)
     # Get the detection dataframe
-    events = sw.summary()
-
-    """
-    data_stim = (events['MidCrossing']*raw.info['sfreq']).astype(int)
-    pre_stim = np.zeros_like(np.array(np.arange(raw.n_times))) 
-    pre_stim[data_stim] = 1
-    stim_chan = pre_stim.reshape(1,-1)
-    
-    mask_info = mne.create_info(ch_names=["STIMSW"],
-                                sfreq=raw.info["sfreq"],
-                                ch_types=["stim"]
-                            )
-    raw_mask = mne.io.RawArray(data=stim_chan,
-                            info=mask_info,
-                            first_samp=raw.first_samp
-                            )
-    raw.add_channels([raw_mask], force_update_info=True)
-    """
-
-    events_sorted = events.sort_values('Start').reset_index(drop=True)
-
-    # Eliminar eventos duplicados dentro de un margen de tiempo (por ejemplo, 100 milisegundos)
-    margin = 0.5  # 500 milisegundos
-    unique_events = [events_sorted.iloc[0]]  # Lista para guardar eventos únicos
-
-    for i in range(1, len(events_sorted)):
-        if events_sorted['Start'].iloc[i] - unique_events[-1]['Start'] > margin:
-            unique_events.append(events_sorted.iloc[i])
-
-    # Convertir la lista de eventos únicos de nuevo a un DataFrame
-    unique_events_df = pd.DataFrame(unique_events)
+    if sw is None :
+        warnings.warn("No se encontraron husos de sueño en los datos.")
+        eventos = pd.DataFrame()  # DataFrame vacío
+    else:
+        events = sw.summary()
 
 
-    return unique_events_df[['Start','Duration']]#raw
+        events_sorted = events.sort_values('Start').reset_index(drop=True)
+
+        # Eliminar eventos duplicados dentro de un margen de tiempo (por ejemplo, 100 milisegundos)
+        margin = 0.5  # 500 milisegundos
+        unique_events = [events_sorted.iloc[0]]  # Lista para guardar eventos únicos
+
+        for i in range(1, len(events_sorted)):
+            if events_sorted['Start'].iloc[i] - unique_events[-1]['Start'] > margin:
+                unique_events.append(events_sorted.iloc[i])
+
+        # Convertir la lista de eventos únicos de nuevo a un DataFrame
+        unique_events_df = pd.DataFrame(unique_events)
+        eventos =unique_events_df[['Start','Duration']]
+
+    return eventos
     
 
 

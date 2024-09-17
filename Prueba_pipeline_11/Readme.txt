@@ -1,0 +1,1 @@
+Similar a prueba 10 pero se evaluan todas las etas, no hay criterio de seleccion

@@ -1,0 +1,1 @@
+Se usasla funcion AASM_RulesDirecto y Final_Vote_UmbralGSSC  ---> tiene un error el codigo puse  q se cumpla N3 siempre que sea menor al 0.2*30
