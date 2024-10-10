@@ -1309,7 +1309,7 @@ def AASM_RulesPrueba15(raw, metadata, result):
 
 
     return Nueva_anotacion
-def AASM_RulesPrueba18(raw, metadata, result):
+def AASM_RulesPrueba19(raw, metadata, result):
     # pregutnar primero N2 salgo
     # sino pregunto N3  salgo
     # sino es N3  fijarme  -> REM sino tiene rem puede ser 
@@ -1398,7 +1398,7 @@ def AASM_RulesPrueba18(raw, metadata, result):
     Rq90rmsEEG = np.nanpercentile(RMS_R, 90)
     Wq90rmsEEG = np.nanpercentile(RMS_W, 90)
     Wq5rmsEEG = np.nanpercentile(RMS_W, 15)
-    PesosN2Q10 = np.nanpercentile(result['GSSC'][0]['N2'][EpocasN2], 2) # pongo 10 porque es la menor cantidad de epcoas con las que suele confundirse con N1
+    PesosN2Q10 = np.nanpercentile(result['GSSC'][0]['N2'][EpocasN2], 5) # pongo 10 porque es la menor cantidad de epcoas con las que suele confundirse con N1
 
     ##############################################################
         # EVALUACION DE PESOS #
@@ -3544,5 +3544,5 @@ def sleep_stage_classification_file(file_data, metadata, results, classifiers = 
     #prediccion = AASM_RulesDirecto(raw, metadata, results) # Prueba 7 y 10
     #prediccion = AASM_RulesDirecto_todos_conGSSC(raw, metadata, results) # prueba 8, 9 me con fundi al realizar la 9 y termino siendo igual a la 8, hago prueba 11 corrigo el error q teniaantes en la 8y9 del porcentaje en tiempo de sw y de %de alpha en W
     #prediccion = ASSM_RulesDirectConReevaluacion(raw, metadata, results)  # prueba 12 (el cod de la prueba 13 cambio asiq meti la prueba 12 en otra funcion ) y 13  no necesita candidatoa  rev
-    prediccion= AASM_RulesPrueba18(file_data, metadata, results)
+    prediccion= AASM_RulesPrueba19(file_data, metadata, results)
     return prediccion
