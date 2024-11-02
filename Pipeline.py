@@ -1591,7 +1591,7 @@ def AASM_RulesPrueba15(raw, metadata, result):
 
 
     return Nueva_anotacion
-def AASM_RulesPrueba18__variantes(raw, metadata, result,ValuePercentil):
+def AASM_RulesPrueba18__variantes(raw, metadata, result,ValuePercentil = 99):
     
     
     Nueva_anotacion = []
@@ -1663,9 +1663,9 @@ def AASM_RulesPrueba18__variantes(raw, metadata, result,ValuePercentil):
     N3q90rmsEEG = np.nanpercentile(RMS_N3, 90)
     Rq90rmsEEG = np.nanpercentile(RMS_R, 90)
     Wq90rmsEEG = np.nanpercentile(RMS_W, 90)
-    Wq5rmsEEG = np.nanpercentile(RMS_W, ValuePercentil)
-    PesosN2Q10 = np.nanpercentile(result['GSSC'][0]['N2'][EpocasN2], ValuePercentil) # pongo 10 porque es la menor cantidad de epcoas con las que suele confundirse con N1
-    PesosWQ15= np.nanpercentile(result['GSSC'][0]['W'][EpocasW], ValuePercentil)
+    Wq15rmsEEG = np.nanpercentile(RMS_W, 15)
+    PesosN2Q90 = np.nanpercentile(result['GSSC'][0]['N2'][EpocasN2], 90) # pongo 10 porque es la menor cantidad de epcoas con las que suele confundirse con N1
+    PesosWQ10= np.nanpercentile(result['GSSC'][0]['W'][EpocasW], 10)
 
     ############################################################################
         # EVALUACION DE PESOS #
@@ -1708,32 +1708,32 @@ def AASM_RulesPrueba18__variantes(raw, metadata, result,ValuePercentil):
                 EpocasW= [key for key, epoca in enumerate(prediccion) if epoca == 0]   
                 filas_seleccionadasThetaW = peri_Theta.loc[EpocasW]
                 if region == 'occipital':
-                    percentil75_ocW.append(np.nanpercentile(filas_seleccionadasThetaW.values, ValuePercentil))
+                    percentil75_ocW.append(np.nanpercentile(filas_seleccionadasThetaW.values, 99))
                     percentil25_ocW.append(np.nanpercentile(filas_seleccionadasThetaW.values, 2))
-                    percentil75_ocN2.append(np.nanpercentile(filas_seleccionadasAlphaN2.values, ValuePercentil))
+                    percentil75_ocN2.append(np.nanpercentile(filas_seleccionadasAlphaN2.values, 99))
                     percentil25_ocN2.append(np.nanpercentile(filas_seleccionadasAlphaN2.values, 2))
-                    percentil75_ocN2Delta.append(np.nanpercentile(filas_seleccionadasDeltaN2.values, 85))
+                    percentil75_ocN2Delta.append(np.nanpercentile(filas_seleccionadasDeltaN2.values, 99))
                     percentil25_ocN2Delta.append(np.nanpercentile(filas_seleccionadasDeltaN2.values, 2))
                 if region == 'frontal':
-                    percentil75_frW.append(np.nanpercentile(filas_seleccionadasThetaW.values, ValuePercentil))
+                    percentil75_frW.append(np.nanpercentile(filas_seleccionadasThetaW.values, 99))
                     percentil25_frW.append(np.nanpercentile(filas_seleccionadasThetaW.values, 2))
-                    percentil75_frN2.append(np.nanpercentile(filas_seleccionadasAlphaN2.values, ValuePercentil))
+                    percentil75_frN2.append(np.nanpercentile(filas_seleccionadasAlphaN2.values, 99))
                     percentil25_frN2.append(np.nanpercentile(filas_seleccionadasAlphaN2.values, 2))
-                    percentil75_frN2Delta.append(np.nanpercentile(filas_seleccionadasDeltaN2.values, 85))
+                    percentil75_frN2Delta.append(np.nanpercentile(filas_seleccionadasDeltaN2.values, 99))
                     percentil25_frN2Delta.append(np.nanpercentile(filas_seleccionadasDeltaN2.values, 2))
                 if region == 'central':
-                    percentil75_crW.append(np.nanpercentile(filas_seleccionadasThetaW.values, ValuePercentil))
+                    percentil75_crW.append(np.nanpercentile(filas_seleccionadasThetaW.values, 99))
                     percentil25_crW.append(np.nanpercentile(filas_seleccionadasThetaW.values, 2))
-                    percentil75_crN2.append(np.nanpercentile(filas_seleccionadasAlphaN2.values, ValuePercentil))
+                    percentil75_crN2.append(np.nanpercentile(filas_seleccionadasAlphaN2.values, 99))
                     percentil25_crN2.append(np.nanpercentile(filas_seleccionadasAlphaN2.values, 2))
-                    percentil75_crN2Delta.append(np.nanpercentile(filas_seleccionadasDeltaN2.values, 85))
+                    percentil75_crN2Delta.append(np.nanpercentile(filas_seleccionadasDeltaN2.values, 99))
                     percentil25_crN2Delta.append(np.nanpercentile(filas_seleccionadasDeltaN2.values, 2))
                 if region == 'parietal':
-                    percentil75_prW.append(np.nanpercentile(filas_seleccionadasThetaW.values, ValuePercentil))
+                    percentil75_prW.append(np.nanpercentile(filas_seleccionadasThetaW.values, 99))
                     percentil25_prW.append(np.nanpercentile(filas_seleccionadasThetaW.values, 2))
-                    percentil75_prN2.append(np.nanpercentile(filas_seleccionadasAlphaN2.values, ValuePercentil))
+                    percentil75_prN2.append(np.nanpercentile(filas_seleccionadasAlphaN2.values, 99))
                     percentil25_prN2.append(np.nanpercentile(filas_seleccionadasAlphaN2.values, 2))
-                    percentil75_prN2Delta.append(np.nanpercentile(filas_seleccionadasDeltaN2.values, 85))
+                    percentil75_prN2Delta.append(np.nanpercentile(filas_seleccionadasDeltaN2.values, 99))
                     percentil25_prN2Delta.append(np.nanpercentile(filas_seleccionadasDeltaN2.values, 2))
             
     Q75_fr_MaxW = max(percentil75_frW) if percentil75_frW else 0
@@ -1816,8 +1816,10 @@ def AASM_RulesPrueba18__variantes(raw, metadata, result,ValuePercentil):
         
         RMSenEpocaActual = rms_list[epoca]
         ############################### PESO EPOCA ACTUAL ##################################
-        peso_actual = result['GSSC'][0]['W'][epoca]
+        peso_actualW = result['GSSC'][0]['W'][epoca]
         peso_actualN2 = result['GSSC'][0]['N2'][epoca]
+        peso_actualN1 = result['GSSC'][0]['N1'][epoca]
+
         ############################################################################################################################
         start_time = deteccion  # las detecciones siempre vana  estar redondeadas en 30 segundos, proque se marcan al incio de cada epoca
         first_half_period = deteccion + 15
@@ -1849,8 +1851,7 @@ def AASM_RulesPrueba18__variantes(raw, metadata, result,ValuePercentil):
         else:
             print("Los tiempos de detección para Spindles están fuera de los límites de la lista")
             eventos_en_rango_spindle = []  # O algún valor predeterminado
-        
-        # Verificar los límites para REM
+       
         if (start_time >= DeteccionRem.min().item()) and (end_time <= DeteccionRem.max().item()):
 
             eventos_en_rango_REM = DeteccionRem[
@@ -1859,6 +1860,7 @@ def AASM_RulesPrueba18__variantes(raw, metadata, result,ValuePercentil):
         else:
             print("Los tiempos de detección para REM están fuera de los límites de la lista")
             eventos_en_rango_REM = [] 
+        
         
         start_time = deteccion  - 30 # epoca anterior
         first_half_period = deteccion + 15
@@ -1896,38 +1898,36 @@ def AASM_RulesPrueba18__variantes(raw, metadata, result,ValuePercentil):
                 Nueva_anotacion.append(2)
             elif len(eventos_en_rango_EpocaAnterior_spindle) != 0 or len(eventos_en_rango_EpocaAnterior_sw) != 0:   
                 Nueva_anotacion.append(2)
+            elif np.sum(duracion__en_rango_sw) > 0.2*30:
+                Nueva_anotacion.append(3)
             elif len(eventos_en_rango_REM) != 0:
                 Nueva_anotacion.append(4)
-
-        #   elif Porcentaje_de_densidad_alpha_cr > Q75_cr_MaxN2_alpha or  Porcentaje_de_densidad_alpha_fr > Q75_fr_MaxN2_alpha or Porcentaje_de_densidad_alpha_pr > Q75_pr_MaxN2_alpha or Porcentaje_de_densidad_alpha_oc > Q75_oc_MaxN2_alpha:
-        #        print('ES N1')
-        #        Nueva_anotacion.append(1)
-        #   elif peso_actualN2 < PesosN2Q10 :
-        #        Nueva_anotacion.append(1)
-        #    elif (epoca - 1 >= 0) and (epoca + 1 < result['GSSC'][1].shape[0]):
-        #        # Verificar si la época anterior y posterior son ambas iguales a 1
-        #        if result['GSSC'][1][epoca - 1] == 1 and result['GSSC'][1][epoca + 1] == 1:
-        #            # Si ambas épocas son 1, hacer algo
-        #            Nueva_anotacion.append(1)
-        #        else: 
-        #            Nueva_anotacion.append(2)
+            elif Porcentaje_de_densidad_alpha_cr > Q75_cr_MaxN2_alpha or  Porcentaje_de_densidad_alpha_fr > Q75_fr_MaxN2_alpha or Porcentaje_de_densidad_alpha_pr > Q75_pr_MaxN2_alpha or Porcentaje_de_densidad_alpha_oc > Q75_oc_MaxN2_alpha:
+                    print('ES N1')
+                    Nueva_anotacion.append(1)
+            #elif peso_actualN2 < PesosN2Q90 and peso_actualW > PesosWQ10  : #and peso_actualN1 > peso_actualW:
+            #        Nueva_anotacion.append(1)
+            #elif (epoca - 1 >= 0) and (epoca + 1 < result['GSSC'][1].shape[0]):
+            #        if result['GSSC'][1][epoca - 1] == 0 and result['GSSC'][1][epoca + 1] == 2:
+            #            # Si ambas épocas son 1, hacer algo
+            #            Nueva_anotacion.append(1)
+            #        else: 
+            #            Nueva_anotacion.append(2)
             else :
                 Nueva_anotacion.append(2)
                 print("No se cumplieron las condiciones específicas para N1, queda como N2")
     
-        #if etapa == 0:
-            #if  peso_actual < PesosWQ15:
-            #    Nueva_anotacion.append(1)
-            #if (RMSenEpocaActual < Wq5rmsEEG ) :# and ( peso_actual < PesosWQ15 ) :
-            #    Nueva_anotacion.append(1)
-            #    print('ES N1')
-            # if  (Porcentaje_de_densidad_Theta_cr > Q75_cr_MaxW or Porcentaje_de_densidad_Theta_fr > Q75_fr_MaxW or Porcentaje_de_densidad_Theta_pr > Q75_pr_MaxW or Porcentaje_de_densidad_Theta_oc > Q75_oc_MaxW):
-            #        Nueva_anotacion.append(1)
-            #        print('ES N1')
+        if etapa == 0:
+            if (RMSenEpocaActual < Wq15rmsEEG ) :# and ( peso_actual < PesosWQ15 ) :
+                Nueva_anotacion.append(1)
+                print('ES N1')
+            if  (Porcentaje_de_densidad_Theta_cr > Q75_cr_MaxW or Porcentaje_de_densidad_Theta_fr > Q75_fr_MaxW or Porcentaje_de_densidad_Theta_pr > Q75_pr_MaxW or Porcentaje_de_densidad_Theta_oc > Q75_oc_MaxW):
+                    Nueva_anotacion.append(1)
+                    print('ES N1')
            
-            #else:
-            #    print("No se cumplieron las condiciones específicas para W, queda como W")
-            #    Nueva_anotacion.append(0)
+            else:
+               print("No se cumplieron las condiciones específicas para W, queda como W")
+               Nueva_anotacion.append(0)
         
         
         else:
@@ -4512,5 +4512,5 @@ def sleep_stage_classification_file(file_data, metadata, results, classifiers = 
     #prediccion = AASM_RulesDirecto(raw, metadata, results) # Prueba 7 y 10
     #prediccion = AASM_RulesDirecto_todos_conGSSC(raw, metadata, results) # prueba 8, 9 me con fundi al realizar la 9 y termino siendo igual a la 8, hago prueba 11 corrigo el error q teniaantes en la 8y9 del porcentaje en tiempo de sw y de %de alpha en W
     #prediccion = ASSM_RulesDirectConReevaluacion(raw, metadata, results)  # prueba 12 (el cod de la prueba 13 cambio asiq meti la prueba 12 en otra funcion ) y 13  no necesita candidatoa  rev
-    prediccion= AASM_RulesPrueba18__variantes(file_data, metadata, results,ValuePercentil)
+    prediccion= AASM_RulesPrueba18__variantes(file_data, metadata, results,ValuePercentil = 99)
     return prediccion
